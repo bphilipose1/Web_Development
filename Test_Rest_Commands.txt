@@ -114,13 +114,13 @@ fetch('http://localhost:3000/albums/Kids%20See%20Ghosts', {
 
 5. Add a new track to a specific album
 
-fetch('http://localhost:3000/albums/1/tracks', {
+fetch('http://localhost:3000/albums/Starboy/tracks', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
-    trackNumber: 1,
     title: "Starboy",
-    duration: "3:50"
+    duration: "3:50",
+    primaryArtist: "The Weeknd"
   })
 });
 
@@ -209,7 +209,7 @@ fetch(`http://localhost:3000/albums/${encodeURIComponent(albumName)}/tracks`, {
   .catch(error => console.error('Error:', error.message));
 
 
-Delete a specific track
+7. Delete a specific track
 
 const albumName = "Starboy"; // Replace with the album name
 const trackId = 4; // Replace with the ID of the track to delete
@@ -230,8 +230,95 @@ fetch(`http://localhost:3000/albums/${encodeURIComponent(albumName)}/tracks/${tr
   .catch(error => console.error('Error:', error.message));
 
 
-Add a new artist
-List all artists
-Update a specific artist's name, biography, and/or social media links
+8. Add a new artist
+
+fetch('http://localhost:3000/artists', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    name: "The Weeknd",
+    biography: "Canadian singer, songwriter, and record producer.",
+    socialMediaLinks: ["https://twitter.com/theweeknd"]
+  })
+})
+  .then(response => response.json())
+  .then(data => console.log('Added The Weeknd:', data))
+  .catch(error => console.error('Error:', error.message));
+
+
+fetch('http://localhost:3000/artists', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    name: "Kanye West",
+    biography: "American rapper, singer, songwriter, and record producer.",
+    socialMediaLinks: ["https://twitter.com/kanyewest"]
+  })
+})
+  .then(response => response.json())
+  .then(data => console.log('Added Kanye West:', data))
+  .catch(error => console.error('Error:', error.message));
+
+
+9. List all artists
+
+fetch('http://localhost:3000/artists', {
+  method: 'GET',
+  headers: { 'Content-Type': 'application/json' }
+})
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Failed to fetch artists');
+    }
+    return response.json();
+  })
+  .then(data => console.log('All artists:', data))
+  .catch(error => console.error('Error:', error.message));
+
+
+
+10. Update a specific artist's name, biography, and/or social media links
+
+------Test 1: Update the Name------
+fetch('http://localhost:3000/artists/1', {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    name: "The Weeknd (Updated)"
+  })
+})
+  .then(response => response.json())
+  .then(data => console.log('Updated artist:', data))
+  .catch(error => console.error('Error:', error.message));
+
+------Test 2: Update Biography and Social Media Links-----
+fetch('http://localhost:3000/artists/1', {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    biography: "Updated biography for The Weeknd.",
+    socialMediaLinks: ["https://instagram.com/theweeknd"]
+  })
+})
+  .then(response => response.json())
+  .then(data => console.log('Updated artist:', data))
+  .catch(error => console.error('Error:', error.message));
+
+-----Test 3: Update All Fields-----
+fetch('http://localhost:3000/artists/2', {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    name: "Kanye West (Updated)",
+    biography: "Updated biography for Kanye West.",
+    socialMediaLinks: ["https://instagram.com/kanyewest"]
+  })
+})
+  .then(response => response.json())
+  .then(data => console.log('Updated artist:', data))
+  .catch(error => console.error('Error:', error.message));
+
+
+
 List all concerts within a time range (minimum and maximum start time/date)
 Change the start date/time of a specific concert
