@@ -11,8 +11,11 @@ router.post('/', (req, res) => {
   if (!title || !duration || !primaryArtist) {
     return res.status(400).send('Missing required track information');
   }
+  if (req.album.tracks.find(track => track.trackTitle === title)) {
+    return res.status(400).send('Track already exists');
+  }
 
-  const trackID = req.album.tracks.length + 1;
+  const trackID = (req.album.tracks?.length || 0) + 1; //In case there are no tracks, start at 1
   const newTrack = { trackID, trackTitle: title, trackDuration: duration, primaryArtist };
   req.album.tracks.push(newTrack);
 
