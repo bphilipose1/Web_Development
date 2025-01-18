@@ -1,0 +1,127 @@
+1. Add a new album
+
+const albums = [
+  {
+    name: "Starboy",
+    year: 2016,
+    artist: "The Weeknd",
+    genre: "R&B"
+  },
+  {
+    name: "DawnFM",
+    year: 2022,
+    artist: "The Weeknd",
+    genre: "Synthwave"
+  },
+  {
+    name: "The College Dropout",
+    year: 2004,
+    artist: "Kanye West",
+    genre: "Hip Hop"
+  },
+  {
+    name: "My Beautiful Dark Twisted Fantasy",
+    year: 2010,
+    artist: "Kanye West",
+    genre: "Hip Hop"
+  }
+];
+
+// Function to send POST requests for each album
+albums.forEach(album => {
+  fetch('http://localhost:3000/albums', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(album)
+  })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => console.log('Album Created:', data))
+    .catch(error => console.error('Error:', error.message));
+});
+
+
+
+2. List all albums
+
+
+fetch('http://localhost:3000/albums', {
+  method: 'GET',
+  headers: {
+    'Content-Type': 'application/json'
+  }
+})
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    return response.json(); // Parse the response JSON
+  })
+  .then(data => console.log('All Albums:', data)) // Log all albums
+  .catch(error => console.error('Error:', error.message));
+
+
+
+
+3.Get the details of a specific album
+
+
+fetch('http://localhost:3000/albums/My%20Beautiful%20Dark%20Twisted%20Fantasy', {
+  method: 'GET',
+  headers: {
+    'Content-Type': 'application/json'
+  }
+})
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    return response.json(); // Parse the response JSON
+  })
+  .then(data => console.log('Specific Album:', data)) // Log the specific album
+  .catch(error => console.error('Error:', error.message));
+
+
+4. Delete a specific album (and all of its associated tracks)
+
+fetch('http://localhost:3000/albums/My%20Beautiful%20Dark%20Twisted%20Fantasy', {
+  method: 'DELETE', // HTTP DELETE method
+  headers: {
+    'Content-Type': 'application/json'
+  }
+})
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    console.log('Album deleted successfully!');
+  })
+  .catch(error => console.error('Error:', error.message));
+
+
+
+5. Add a new track to a specific album
+
+fetch('http://localhost:3000/albums/1/tracks', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    trackNumber: 1,
+    title: "Starboy",
+    duration: "3:50"
+  })
+});
+
+Get the details all of the tracks for a specific album
+Delete a specific track
+Add a new artist
+List all artists
+Update a specific artist's name, biography, and/or social media links
+List all concerts within a time range (minimum and maximum start time/date)
+Change the start date/time of a specific concert
