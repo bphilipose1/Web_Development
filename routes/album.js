@@ -15,12 +15,12 @@ let nextAlbumID = 1;
 - tracks
 */
 
-// Utility functions to find an item by ID or Name
-function findById(array, id) {
-  return array.find(item => item.albumID === id);
+// Utility functions to find an item by ID or Name and return the object
+function findById(id) {
+  return albums.find(item => item.albumID === id);
 }
-function findByName(array, name) {
-  return array.find(item => item.albumName === name);
+function findByName(name) {
+  return albums.find(item => item.albumName === name);
 }
 
 // Add a new album (POST) 
@@ -35,7 +35,7 @@ router.post('/', (request, response) => {
   }
 
   // Check if the album already exists
-  if (findByName(albums, albumName)) {
+  if (findByName(albumName)) {
     response.status(400).send('Album already exists');
     return;
   }
@@ -71,7 +71,7 @@ router.get('/', (request, response) => {
 router.get('/:albumID', (request, response) => {
   const albumID = parseInt(request.params.albumID, 10);
   console.log(albumID);
-  const album = findById(albums, albumID);
+  const album = findById(albumID);
 
   if (album) {
     response.send(album);
@@ -83,12 +83,15 @@ router.get('/:albumID', (request, response) => {
 // Delete a specific album (DELETE)
 router.delete('/:albumID', (request, response) => {
   const albumID = parseInt(request.params.albumID, 10);
-  const albumIndex = findById(albums, albumID);
+
+
+  const albumIndex = albums.findIndex(album => album.albumID === albumID);
 
   if (albumIndex === -1) {
     response.status(404).send('Album not found');
     return;
   }
+
 
   const deletedAlbum = albums.splice(albumIndex, 1);
   response.status(200).send(deletedAlbum);
@@ -96,7 +99,7 @@ router.delete('/:albumID', (request, response) => {
 
 // Mount the tracks router under /albums/:albumId/tracks and send over the album object
 router.use('/:albumID/tracks', (req, res, next) => {
-  const album = findById(albums, parseInt(req.params.albumID, 10));
+  const album = findById(parseInt(req.params.albumID, 10));
   if (!album) {
     return res.status(404).send('Album not found');
   }
