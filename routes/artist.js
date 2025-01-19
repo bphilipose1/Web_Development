@@ -4,16 +4,32 @@ const router = express.Router();
 const artists = [];
 let artistID = 1;
 
+/*Artist Structure:
+- artistID
+- name
+- biography
+- socialMediaLinks (optional)
+*/
+
 // Add a new artist (POST)
 router.post('/', (request, response) => {
   const { name, biography, socialMediaLinks } = request.body;
-  if (!name || !biography) { //socialMediaLinks is optional
+  if (!name || !biography) { // socialMediaLinks is optional
     response.status(400).send('Missing required information');
     return;
   }
-  const artistID = (artists.length || 0) + 1; //In case there are no tracks, start at 1
+
+  //Check if the artist already exists
+  const existingArtist = artists.find(artist => artist.name === name);
+  if (existingArtist) {
+    response.status(400).send('Artist already exists');
+    return;
+  }
+
+
   const newArtist = { artistID, name, biography, socialMediaLinks };
   artists.push(newArtist);
+  artistID++; 
   response.status(201).send(newArtist);
 });
 
@@ -41,6 +57,5 @@ router.patch('/:artistId', (req, res) => {
   }
   res.status(200).json(artist);
 });
-
 
 module.exports = router;

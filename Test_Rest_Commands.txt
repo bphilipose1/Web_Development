@@ -189,32 +189,76 @@ fetch(`http://localhost:3000/albums/${albumID}/tracks/${trackID}`, {
 
 8. Add a new artist
 
-fetch('http://localhost:3000/artists', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    name: "The Weeknd",
-    biography: "Canadian singer, songwriter, and record producer.",
-    socialMediaLinks: ["https://twitter.com/theweeknd"]
-  })
-})
-  .then(response => response.json())
-  .then(data => console.log('Added The Weeknd:', data))
-  .catch(error => console.error('Error:', error.message));
-
-
-fetch('http://localhost:3000/artists', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
+const topRappers = [
+  {
     name: "Kanye West",
     biography: "American rapper, singer, songwriter, and record producer.",
     socialMediaLinks: ["https://twitter.com/kanyewest"]
+  },
+  {
+    name: "Drake",
+    biography: "Canadian rapper, singer, and actor known for his versatile style.",
+    socialMediaLinks: ["https://twitter.com/Drake"]
+  },
+  {
+    name: "Kendrick Lamar",
+    biography: "American rapper and songwriter acclaimed for his thought-provoking lyrics.",
+    socialMediaLinks: ["https://twitter.com/kendricklamar"]
+  },
+  {
+    name: "J. Cole",
+    biography: "American rapper, singer, and record producer known for his storytelling.",
+    socialMediaLinks: ["https://twitter.com/JColeNC"]
+  },
+  {
+    name: "Jay-Z",
+    biography: "American rapper, entrepreneur, and one of the most influential artists in hip-hop.",
+    socialMediaLinks: ["https://twitter.com/sc"]
+  },
+  {
+    name: "Nicki Minaj",
+    biography: "Trinidadian-American rapper, singer, and songwriter known for her dynamic delivery.",
+    socialMediaLinks: ["https://twitter.com/nickiminaj"]
+  },
+  {
+    name: "Lil Wayne",
+    biography: "American rapper regarded as one of the most influential hip-hop artists of his generation.",
+    socialMediaLinks: ["https://twitter.com/LilTunechi"]
+  },
+  {
+    name: "Eminem",
+    biography: "American rapper, songwriter, and producer often called the 'Rap God'.",
+    socialMediaLinks: ["https://twitter.com/Eminem"]
+  },
+  {
+    name: "Travis Scott",
+    biography: "American rapper, singer, and songwriter known for his unique sound and stage performances.",
+    socialMediaLinks: ["https://twitter.com/trvisXX"]
+  },
+  {
+    name: "Future",
+    biography: "American rapper and singer known for his use of Auto-Tune and trap music.",
+    socialMediaLinks: ["https://twitter.com/1future"]
+  }
+];
+
+// Loop through each rapper and add them to the server
+topRappers.forEach(artist => {
+  fetch('http://localhost:3000/artists', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(artist)
   })
-})
-  .then(response => response.json())
-  .then(data => console.log('Added Kanye West:', data))
-  .catch(error => console.error('Error:', error.message));
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`Failed to add artist: ${artist.name}`);
+      }
+      return response.json();
+    })
+    .then(data => console.log(`Added artist:`, data))
+    .catch(error => console.error('Error:', error.message));
+});
+
 
 
 9. List all artists
@@ -236,39 +280,26 @@ fetch('http://localhost:3000/artists', {
 
 10. Update a specific artist's name, biography, and/or social media links
 
-------Test 1: Update the Name------
+//Test 1: Update the Name
 fetch('http://localhost:3000/artists/1', {
   method: 'PATCH',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
-    name: "The Weeknd (Updated)"
+    name: "Ye (Updated)"
   })
 })
   .then(response => response.json())
   .then(data => console.log('Updated artist:', data))
   .catch(error => console.error('Error:', error.message));
 
-------Test 2: Update Biography and Social Media Links-----
+
+//Test 2: Update Biography and Social Media Links
 fetch('http://localhost:3000/artists/1', {
   method: 'PATCH',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
-    biography: "Updated biography for The Weeknd.",
-    socialMediaLinks: ["https://instagram.com/theweeknd"]
-  })
-})
-  .then(response => response.json())
-  .then(data => console.log('Updated artist:', data))
-  .catch(error => console.error('Error:', error.message));
-
------Test 3: Update All Fields-----
-fetch('http://localhost:3000/artists/2', {
-  method: 'PATCH',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    name: "Kanye West (Updated)",
-    biography: "Updated biography for Kanye West.",
-    socialMediaLinks: ["https://instagram.com/kanyewest"]
+    biography: "I am God.",
+    socialMediaLinks: ["https://instagram.com/ye"]
   })
 })
   .then(response => response.json())
