@@ -4,31 +4,26 @@ const albums = [
   {
     name: "Starboy",
     year: 2016,
-    artist: "The Weeknd",
     genre: "R&B"
   },
   {
     name: "DawnFM",
     year: 2022,
-    artist: "The Weeknd",
     genre: "Synthwave"
   },
   {
     name: "The College Dropout",
     year: 2004,
-    artist: "Kanye West",
     genre: "Hip Hop"
   },
   {
     name: "My Beautiful Dark Twisted Fantasy",
     year: 2010,
-    artist: "Kanye West",
     genre: "Hip Hop"
   },
   {
     name: "Kids See Ghosts",
     year: 2018,
-    artist: ["Kanye West", "Kid Cudi"],
     genre: "Hip Hop"
   }
 ];
@@ -53,9 +48,7 @@ albums.forEach(album => {
 });
 
 
-
 2. List all albums
-
 
 fetch('http://localhost:3000/albums', {
   method: 'GET',
@@ -74,11 +67,9 @@ fetch('http://localhost:3000/albums', {
 
 
 
-
 3.Get the details of a specific album
 
-
-fetch('http://localhost:3000/albums/My%20Beautiful%20Dark%20Twisted%20Fantasy', {
+fetch('http://localhost:3000/albums/1', { // Replace 1 with the albumID you want
   method: 'GET',
   headers: {
     'Content-Type': 'application/json'
@@ -93,11 +84,10 @@ fetch('http://localhost:3000/albums/My%20Beautiful%20Dark%20Twisted%20Fantasy', 
   .then(data => console.log('Specific Album:', data)) // Log the specific album
   .catch(error => console.error('Error:', error.message));
 
-
 4. Delete a specific album (and all of its associated tracks)
 
-fetch('http://localhost:3000/albums/Kids%20See%20Ghosts', {
-  method: 'DELETE', // HTTP DELETE method
+fetch('http://localhost:3000/albums/1', { // Replace 1 with the albumID you want to delete
+  method: 'DELETE',
   headers: {
     'Content-Type': 'application/json'
   }
@@ -320,5 +310,157 @@ fetch('http://localhost:3000/artists/2', {
 
 
 
-List all concerts within a time range (minimum and maximum start time/date)
-Change the start date/time of a specific concert
+11.List all concerts within a time range (minimum and maximum start time/date)
+
+---------ADD A NEW CONCERT------------
+fetch('http://localhost:3000/concerts/StarboyTour', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    startTime: "2025-01-20T20:00:00Z",
+    duration: "2 hours",
+    artist: "The Weeknd",
+    otherArtists: ["Doja Cat", "Drake"]
+  })
+})
+  .then(response => response.json())
+  .then(data => console.log('New concert added:', data))
+  .catch(error => console.error('Error:', error.message));
+
+
+
+--------------------MULTIPLE CONCERTS ADD---------------------------
+
+
+const concerts = [
+  {
+    concertName: "StarboyTour",
+    startTime: "2025-01-20T20:00:00Z",
+    duration: "2 hours",
+    artist: "The Weeknd",
+    otherArtists: ["Doja Cat", "Drake"]
+  },
+  {
+    concertName: "AfterHoursTilDawn",
+    startTime: "2025-03-15T21:00:00Z",
+    duration: "3 hours",
+    artist: "The Weeknd",
+    otherArtists: ["Ariana Grande"]
+  },
+  {
+    concertName: "DondaExperience",
+    startTime: "2025-04-10T19:00:00Z",
+    duration: "2.5 hours",
+    artist: "Kanye West",
+    otherArtists: ["Jay-Z"]
+  },
+  {
+    concertName: "RenaissanceTour",
+    startTime: "2025-05-20T20:30:00Z",
+    duration: "2 hours",
+    artist: "Beyoncé",
+    otherArtists: ["Chloe x Halle"]
+  },
+  {
+    concertName: "FolkloreEvermore",
+    startTime: "2025-06-05T18:30:00Z",
+    duration: "2 hours",
+    artist: "Taylor Swift",
+    otherArtists: []
+  },
+  {
+    concertName: "FutureNostalgia",
+    startTime: "2025-07-10T20:00:00Z",
+    duration: "1.5 hours",
+    artist: "Dua Lipa",
+    otherArtists: []
+  },
+  {
+    concertName: "DivideTour",
+    startTime: "2025-08-15T19:00:00Z",
+    duration: "2 hours",
+    artist: "Ed Sheeran",
+    otherArtists: []
+  },
+  {
+    concertName: "JusticeWorldTour",
+    startTime: "2025-09-20T21:00:00Z",
+    duration: "2 hours",
+    artist: "Justin Bieber",
+    otherArtists: ["The Kid LAROI"]
+  },
+  {
+    concertName: "HappierThanEverTour",
+    startTime: "2025-10-25T20:00:00Z",
+    duration: "2 hours",
+    artist: "Billie Eilish",
+    otherArtists: []
+  },
+  {
+    concertName: "RockNRollRevival",
+    startTime: "2025-11-30T20:30:00Z",
+    duration: "3 hours",
+    artist: "The Rolling Stones",
+    otherArtists: ["Paul McCartney"]
+  }
+];
+
+concerts.forEach(concert => {
+  fetch(`http://localhost:3000/concerts/${concert.concertName}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      startTime: concert.startTime,
+      duration: concert.duration,
+      artist: concert.artist,
+      otherArtists: concert.otherArtists
+    })
+  })
+    .then(response => {
+      if (!response.ok) throw new Error(`Failed to add concert: ${concert.concertName}`);
+      return response.json();
+    })
+    .then(data => console.log(`Concert added successfully:`, data))
+    .catch(error => console.error(error.message));
+});
+
+
+
+---------LISTS ALL CONCERTS WITHIN A TIME RANGE-------------
+
+const minDate = "2025-06-01";
+const maxDate = "2025-12-31";
+
+fetch(`http://localhost:3000/concerts/range?minDate=${minDate}&maxDate=${maxDate}`, {
+  method: 'GET',
+  headers: { 'Content-Type': 'application/json' }
+})
+  .then(response => {
+    if (!response.ok) throw new Error('Failed to fetch concerts within the specified time range.');
+    return response.json();
+  })
+  .then(data => {
+    console.log(`Concerts between ${minDate} and ${maxDate}:`, data);
+  })
+  .catch(error => console.error('Error:', error.message));
+
+
+
+12. Change the start date/time of a specific concert
+
+const concertToUpdate = "StarboyTour";
+const newStartTime = "2025-01-21T20:00:00Z";
+
+fetch(`http://localhost:3000/concerts/${concertToUpdate}`, {
+  method: 'PATCH',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    startTime: newStartTime
+  })
+})
+  .then(response => {
+    if (!response.ok) throw new Error(`Failed to update start time for ${concertToUpdate}`);
+    return response.json();
+  })
+  .then(data => console.log(`Updated concert:`, data))
+  .catch(error => console.error('Error:', error.message));
