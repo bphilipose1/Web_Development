@@ -104,24 +104,10 @@ fetch('http://localhost:3000/albums/1', { // Replace 1 with the albumID you want
 
 5. Add a new track to a specific album
 
-fetch('http://localhost:3000/albums/Starboy/tracks', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    title: "Starboy",
-    duration: "3:50",
-    primaryArtist: "The Weeknd"
-  })
-});
-
-
-
-OR....
-
 
 const albumsWithTracks = [
   {
-    albumName: "Starboy",
+    albumID: 1, // Replace with the correct albumID for "Starboy"
     tracks: [
       { title: "Starboy", duration: "3:50", primaryArtist: "The Weeknd" },
       { title: "Party Monster", duration: "4:09", primaryArtist: "The Weeknd" },
@@ -131,7 +117,7 @@ const albumsWithTracks = [
     ]
   },
   {
-    albumName: "DawnFM",
+    albumID: 2, // Replace with the correct albumID for "DawnFM"
     tracks: [
       { title: "Gasoline", duration: "3:32", primaryArtist: "The Weeknd" },
       { title: "How Do I Make You Love Me?", duration: "3:34", primaryArtist: "The Weeknd" },
@@ -139,85 +125,66 @@ const albumsWithTracks = [
       { title: "Sacrifice", duration: "3:09", primaryArtist: "The Weeknd" },
       { title: "Out of Time", duration: "3:34", primaryArtist: "The Weeknd" }
     ]
-  },
-  {
-    albumName: "The College Dropout",
-    tracks: [
-      { title: "We Don't Care", duration: "3:58", primaryArtist: "Kanye West" },
-      { title: "Graduation Day", duration: "1:21", primaryArtist: "Kanye West" },
-      { title: "All Falls Down", duration: "3:43", primaryArtist: "Kanye West" },
-      { title: "Spaceship", duration: "5:24", primaryArtist: "Kanye West" },
-      { title: "Jesus Walks", duration: "3:13", primaryArtist: "Kanye West" }
-    ]
-  },
-  {
-    albumName: "My Beautiful Dark Twisted Fantasy",
-    tracks: [
-      { title: "Dark Fantasy", duration: "4:40", primaryArtist: "Kanye West" },
-      { title: "Gorgeous", duration: "5:58", primaryArtist: "Kanye West" },
-      { title: "POWER", duration: "4:52", primaryArtist: "Kanye West" },
-      { title: "All of the Lights", duration: "4:59", primaryArtist: "Kanye West" },
-      { title: "Monster", duration: "6:18", primaryArtist: "Kanye West" }
-    ]
   }
 ];
 
 albumsWithTracks.forEach(album => {
   album.tracks.forEach(track => {
-    fetch(`http://localhost:3000/albums/${encodeURIComponent(album.albumName)}/tracks`, {
+    fetch(`http://localhost:3000/albums/${album.albumID}/tracks`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(track)
     })
       .then(response => {
         if (!response.ok) {
-          throw new Error(`Failed to add track: ${track.title} to album: ${album.albumName}`);
+          throw new Error(`Failed to add track: ${track.title} to album ID: ${album.albumID}`);
         }
         return response.json();
       })
-      .then(data => console.log(`Track added to album '${album.albumName}':`, data))
+      .then(data => console.log(`Track added to album ID '${album.albumID}':`, data))
       .catch(error => console.error('Error:', error.message));
   });
 });
 
 
+
 6. Get the details all of the tracks for a specific album
 
-const albumName = "Starboy"; // Replace with the desired album name
-
-fetch(`http://localhost:3000/albums/${encodeURIComponent(albumName)}/tracks`, {
+const albumID = 1; // Replace with the desired albumID
+fetch(`http://localhost:3000/albums/${albumID}/tracks`, {
   method: 'GET',
   headers: { 'Content-Type': 'application/json' }
 })
   .then(response => {
     if (!response.ok) {
-      throw new Error(`Failed to fetch tracks for album: ${albumName}. Status: ${response.status}`);
+      throw new Error(`Failed to fetch tracks for album ID: ${albumID}. Status: ${response.status}`);
     }
-    return response.json(); // Parse the JSON response
+    return response.json();
   })
-  .then(data => console.log(`Tracks for album '${albumName}':`, data))
+  .then(data => console.log(`Tracks for album ID '${albumID}':`, data))
   .catch(error => console.error('Error:', error.message));
 
 
 7. Delete a specific track
 
-const albumName = "Starboy"; // Replace with the album name
-const trackId = 4; // Replace with the ID of the track to delete
+const albumID = 1; // Replace with the correct albumID
+const trackID = 1; // Replace with the ID of the track to delete
 
-fetch(`http://localhost:3000/albums/${encodeURIComponent(albumName)}/tracks/${trackId}`, {
+fetch(`http://localhost:3000/albums/${albumID}/tracks/${trackID}`, {
   method: 'DELETE',
   headers: { 'Content-Type': 'application/json' }
 })
   .then(response => {
-    if (response.status === 204) {
-      console.log(`Track with ID ${trackId} from album '${albumName}' deleted successfully.`);
+    if (response.status === 200) {
+      console.log(`Track with ID ${trackID} from album ID '${albumID}' deleted successfully.`);
     } else if (!response.ok) {
-      throw new Error(`Failed to delete track with ID ${trackId} from album '${albumName}'. Status: ${response.status}`);
+      throw new Error(`Failed to delete track with ID ${trackID} from album ID '${albumID}'. Status: ${response.status}`);
     }
     return response.json();
   })
-  .then(data => console.log('Response:', data))
+  .then(data => console.log('Deleted track:', data))
   .catch(error => console.error('Error:', error.message));
+
 
 
 8. Add a new artist

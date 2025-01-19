@@ -2,15 +2,23 @@ const express = require('express');
 const router = express.Router({ mergeParams: true }); // Merge params to access albumId from parent
 
 
-//Each Track will have trackID, trackTitle, trackDuration, and primaryArtist
+/*Tracks Structure
+- trackID (unique identifier within an album)
+- trackTitle
+- trackDuration
+- primaryArtist
+*/
 
 // Add a new track to a specific album (POST)
 router.post('/', (req, res) => {
   const { title, duration, primaryArtist } = req.body;
 
+  //check if required information is provided
   if (!title || !duration || !primaryArtist) {
     return res.status(400).send('Missing required track information');
   }
+
+  //check if the track already exists
   if (req.album.tracks.find(track => track.trackTitle === title)) {
     return res.status(400).send('Track already exists');
   }
@@ -19,12 +27,12 @@ router.post('/', (req, res) => {
   const newTrack = { trackID, trackTitle: title, trackDuration: duration, primaryArtist };
   req.album.tracks.push(newTrack);
 
-  res.status(201).json(newTrack);
+  res.status(201).send(newTrack);
 });
 
 // Get all tracks for a specific album (GET)
 router.get('/', (req, res) => {
-  res.status(200).json(req.album.tracks);
+  res.status(200).send(req.album.tracks);
 });
 
 // Delete a specific track from an album (DELETE)
@@ -36,8 +44,8 @@ router.delete('/:trackId', (req, res) => {
     return res.status(404).send('Track not found');
   }
 
-  const deletedTrack = req.album.tracks.splice(trackIndex, 1);
-  res.status(200).json(deletedTrack);
+  const deletedTrack = req.album.tracks.splice(trackIndex, 1)[0];
+  res.status(200).send(deletedTrack);
 });
 
 module.exports = router;
