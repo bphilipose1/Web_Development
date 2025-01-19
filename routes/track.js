@@ -18,6 +18,13 @@ router.post('/', (req, res) => {
     return res.status(400).send('Missing required track information');
   }
 
+  //validate duration format (e.g., mm:ss)
+  const durationRegex = /^\d{1,2}:\d{2}$/;
+  if (!durationRegex.test(duration)) {
+    return res.status(400).send('Invalid duration format. Use mm:ss.');
+  }
+
+
   //check if the track already exists
   if (req.album.tracks.find(track => track.trackTitle === title)) {
     return res.status(400).send('Track already exists');

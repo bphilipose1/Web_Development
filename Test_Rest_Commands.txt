@@ -310,126 +310,61 @@ fetch('http://localhost:3000/artists/1', {
 
 11.List all concerts within a time range (minimum and maximum start time/date)
 
----------ADD A NEW CONCERT------------
-fetch('http://localhost:3000/concerts/StarboyTour', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    startTime: "2025-01-20T20:00:00Z",
-    duration: "2 hours",
-    artist: "The Weeknd",
-    otherArtists: ["Doja Cat", "Drake"]
-  })
-})
-  .then(response => response.json())
-  .then(data => console.log('New concert added:', data))
-  .catch(error => console.error('Error:', error.message));
-
-
-
---------------------MULTIPLE CONCERTS ADD---------------------------
-
-
+//ADD MULTIPLE CONCERTS
 const concerts = [
   {
     concertName: "StarboyTour",
     startTime: "2025-01-20T20:00:00Z",
-    duration: "2 hours",
+    duration: "2:00",
     artist: "The Weeknd",
     otherArtists: ["Doja Cat", "Drake"]
   },
   {
     concertName: "AfterHoursTilDawn",
     startTime: "2025-03-15T21:00:00Z",
-    duration: "3 hours",
+    duration: "3:00",
     artist: "The Weeknd",
     otherArtists: ["Ariana Grande"]
   },
   {
     concertName: "DondaExperience",
     startTime: "2025-04-10T19:00:00Z",
-    duration: "2.5 hours",
+    duration: "2:30",
     artist: "Kanye West",
     otherArtists: ["Jay-Z"]
-  },
-  {
-    concertName: "RenaissanceTour",
-    startTime: "2025-05-20T20:30:00Z",
-    duration: "2 hours",
-    artist: "Beyoncé",
-    otherArtists: ["Chloe x Halle"]
-  },
-  {
-    concertName: "FolkloreEvermore",
-    startTime: "2025-06-05T18:30:00Z",
-    duration: "2 hours",
-    artist: "Taylor Swift",
-    otherArtists: []
-  },
-  {
-    concertName: "FutureNostalgia",
-    startTime: "2025-07-10T20:00:00Z",
-    duration: "1.5 hours",
-    artist: "Dua Lipa",
-    otherArtists: []
-  },
-  {
-    concertName: "DivideTour",
-    startTime: "2025-08-15T19:00:00Z",
-    duration: "2 hours",
-    artist: "Ed Sheeran",
-    otherArtists: []
-  },
-  {
-    concertName: "JusticeWorldTour",
-    startTime: "2025-09-20T21:00:00Z",
-    duration: "2 hours",
-    artist: "Justin Bieber",
-    otherArtists: ["The Kid LAROI"]
-  },
-  {
-    concertName: "HappierThanEverTour",
-    startTime: "2025-10-25T20:00:00Z",
-    duration: "2 hours",
-    artist: "Billie Eilish",
-    otherArtists: []
-  },
-  {
-    concertName: "RockNRollRevival",
-    startTime: "2025-11-30T20:30:00Z",
-    duration: "3 hours",
-    artist: "The Rolling Stones",
-    otherArtists: ["Paul McCartney"]
   }
 ];
-
 concerts.forEach(concert => {
-  fetch(`http://localhost:3000/concerts/${concert.concertName}`, {
+  fetch('http://localhost:3000/concerts', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
+      concertName: concert.concertName,
       startTime: concert.startTime,
       duration: concert.duration,
       artist: concert.artist,
       otherArtists: concert.otherArtists
     })
   })
-    .then(response => {
-      if (!response.ok) throw new Error(`Failed to add concert: ${concert.concertName}`);
-      return response.json();
-    })
+    .then(response => response.json())
     .then(data => console.log(`Concert added successfully:`, data))
-    .catch(error => console.error(error.message));
+    .catch(error => console.error(`Error adding concert: ${concert.concertName}`, error.message));
 });
 
+//LIST ALL CONCERTS
+fetch('http://localhost:3000/concerts', {
+  method: 'GET',
+  headers: { 'Content-Type': 'application/json' }
+})
+  .then(response => response.json())
+  .then(data => console.log('All concerts:', data))
+  .catch(error => console.error('Error:', error.message));
 
-
----------LISTS ALL CONCERTS WITHIN A TIME RANGE-------------
-
-const minDate = "2025-06-01";
+//LISTS ALL CONCERTS WITHIN A TIME RANGE
+const minDate = "2025-02-01";
 const maxDate = "2025-12-31";
 
-fetch(`http://localhost:3000/concerts/range?minDate=${minDate}&maxDate=${maxDate}`, {
+fetch(`http://localhost:3000/concerts?minDate=${minDate}&maxDate=${maxDate}`, {
   method: 'GET',
   headers: { 'Content-Type': 'application/json' }
 })
@@ -437,10 +372,9 @@ fetch(`http://localhost:3000/concerts/range?minDate=${minDate}&maxDate=${maxDate
     if (!response.ok) throw new Error('Failed to fetch concerts within the specified time range.');
     return response.json();
   })
-  .then(data => {
-    console.log(`Concerts between ${minDate} and ${maxDate}:`, data);
-  })
+  .then(data => console.log(`Concerts between ${minDate} and ${maxDate}:`, data))
   .catch(error => console.error('Error:', error.message));
+
 
 
 
@@ -456,9 +390,7 @@ fetch(`http://localhost:3000/concerts/${concertToUpdate}`, {
     startTime: newStartTime
   })
 })
-  .then(response => {
-    if (!response.ok) throw new Error(`Failed to update start time for ${concertToUpdate}`);
-    return response.json();
-  })
+  .then(response => response.json())
   .then(data => console.log(`Updated concert:`, data))
   .catch(error => console.error('Error:', error.message));
+

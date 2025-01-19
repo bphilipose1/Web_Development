@@ -4,27 +4,89 @@ const router = express.Router();
 const concerts = [];
 let concertID = 1;
 
-// List all concerts within a time range (GET)
+/*
+Concerts:
+- concertID
+- concertName
+- startTime (Date object)
+- duration
+- artist
+- otherArtists (optional)
+*/
+
+// Utility function to find a concert by ID or Name
+function findById(id) {
+  return concerts.find(concert => concert.concertID === id);
+}
+
+function findByName(name) {
+  return concerts.find(concert => concert.concertName === name);
+}
+
+// List all concerts within a time range IF PROVIDED (GET)
 router.get('/', (req, res) => {
   const { minDate, maxDate } = req.query;
 
   if (!minDate || !maxDate) {
-    return res.status(400).send('Please provide both minDate and maxDate.');
+    return res.status(200).send(concerts);
   }
 
-  const filteredConcerts = concerts.filter(
-    concert =>
-      new Date(concert.startTime) >= new Date(minDate) &&
-      new Date(concert.startTime) <= new Date(maxDate)
-  );
+  // Convert the dates to Date objects
+  const minDateObj = new Date(minDate);
+  const maxDateObj = new Date(maxDate);
 
-  res.send(filteredConcerts);
+  // Validate the date format conversion was successful
+  if (isNaN(minDateObj) || isNaN(maxDateObj)) {
+    return res.status(400).send('Invalid date format. Use YYYY-MM-DD.');
+  }
+
+  // Filter concerts based on startTime
+  const filteredConcerts = concerts.filter(concert => {
+    const concertStartTime = new Date(concert.startTime);
+    return concertStartTime >= minDateObj && concertStartTime <= maxDateObj;
+  });
+
+  res.status(200).send(filteredConcerts);
 });
 
-// Change the start date/time of a specific concert (PUT)
-router.put('/:concertId', (req, res) => {
-  const concertId = parseInt(req.params.concertId);
-  const concert = concerts.find(concert => concert.id === concertId);
+// Add a new concert (POST)
+router.post('/', (req, res) => {
+  const { concertName, startTime, duration, artist, otherArtists = [] } = req.body;
+
+  // Validate required fields
+  if (!concertName || !startTime || !duration || !artist) {
+    return res.status(400).send('Missing required information.');
+  }
+
+  // Validate startTime format
+  const startTimeObj = new Date(startTime);
+  if (isNaN(startTimeObj)) {
+    return res.status(400).send('Invalid startTime format. Use ISO 8601.');
+  }
+
+  // Check if concert already exists
+  if (findByName(concertName)) {
+    return res.status(400).send('Concert already exists.');
+  }
+
+  // Create and add new concert
+  const newConcert = {
+    concertID: concertID++,
+    concertName,
+    startTime: startTimeObj,
+    duration,
+    artist,
+    otherArtists
+  };
+  concerts.push(newConcert);
+
+  res.status(201).send(newConcert);
+});
+
+// Can change ONLY the start date/time of a specific concert (PATCH)
+router.patch('/:concertName', (req, res) => {
+  const concertName = req.params.concertName;
+  const concert = findByName(concertName);
 
   if (!concert) {
     return res.status(404).send('Concert not found.');
@@ -33,10 +95,16 @@ router.put('/:concertId', (req, res) => {
   const { startTime } = req.body;
 
   if (!startTime) {
-    return res.status(400).send('Missing startTime.');
+    return res.status(400).send('Please provide startTime to update.');
   }
 
-  concert.startTime = startTime;
+  const startTimeObj = new Date(startTime);
+  if (isNaN(startTimeObj)) {
+    return res.status(400).send('Invalid startTime format. Use ISO 8601.');
+  }
+
+  concert.startTime = startTimeObj;
+
   res.status(200).send(concert);
 });
 
