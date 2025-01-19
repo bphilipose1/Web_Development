@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { artists } = require('./artist'); // Import artists array
-const tracksRouter = require('./track'); // Import tracks router
+const { artists } = require('./artist'); //import artists array
+const tracksRouter = require('./track'); //import tracks router
 
 const albums = [];
 let nextAlbumID = 1;
@@ -15,7 +15,7 @@ let nextAlbumID = 1;
 - tracks
 */
 
-// Utility functions to find an item by ID or Name and return the object
+//utility functions to find an item by ID or Name and return the object
 function findById(id) {
   return albums.find(item => item.albumID === id);
 }
@@ -28,19 +28,19 @@ router.post('/', (request, response) => {
   const { name: albumName, year: releaseYear, artist: artistID, genre: albumGenre } = request.body;
   console.log('Running [Add a new album (POST)]');
   console.log(albumName, releaseYear, artistID, albumGenre);
-  // Check if the required information is provided
+  //check if the required information is provided
   if (!albumName || !releaseYear || !albumGenre) {
     response.status(400).send('Missing required information');
     return;
   }
 
-  // Check if the album already exists
+  //check if the album already exists
   if (findByName(albumName)) {
     response.status(400).send('Album already exists');
     return;
   }
 
-  // If artistID is provided, check if the artist exists
+  //if artistID is provided, check if the artist exists
   if (artistID) {
     const artistExists = artists.find(artist => artist.artistID === artistID);
     if (!artistExists) {
@@ -97,7 +97,7 @@ router.delete('/:albumID', (request, response) => {
   response.status(200).send(deletedAlbum);
 });
 
-// Mount the tracks router under /albums/:albumId/tracks and send over the album object
+// if the album exists, pass the album object to the tracksRouter
 router.use('/:albumID/tracks', (req, res, next) => {
   const album = findById(parseInt(req.params.albumID, 10));
   if (!album) {
