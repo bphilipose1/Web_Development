@@ -26,8 +26,6 @@ function findByName(name) {
 // Add a new album (POST) 
 router.post('/', (request, response) => {
   const { name: albumName, year: releaseYear, artist: artistID, genre: albumGenre } = request.body;
-  console.log('Running [Add a new album (POST)]');
-  console.log(albumName, releaseYear, artistID, albumGenre);
   //check if the required information is provided
   if (!albumName || !releaseYear || !albumGenre) {
     response.status(400).send('Missing required information');
@@ -63,18 +61,16 @@ router.post('/', (request, response) => {
 
 // List all albums (GET)
 router.get('/', (request, response) => {
-  console.log('Running [List all albums (GET)]');
-  response.send(albums);
+  response.status(200).send(albums);
 });
 
 // Get the details of a specific album (GET)
 router.get('/:albumID', (request, response) => {
   const albumID = parseInt(request.params.albumID, 10);
-  console.log(albumID);
   const album = findById(albumID);
 
   if (album) {
-    response.send(album);
+    response.status(200).send(album);
   } else {
     response.status(404).send('Album not found');
   }

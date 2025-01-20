@@ -35,7 +35,7 @@ router.post('/', (request, response) => {
 
 // List all artists (GET)
 router.get('/', (request, response) => {
-  response.send(artists);
+  response.status(200).send(artists);
 });
 
 // Update an artist's details (PATCH)
