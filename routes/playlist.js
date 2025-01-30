@@ -1,13 +1,15 @@
 const express = require('express');
 const router = express.Router();
+const { albums } = require('./album');
 const connectToDatabase = require('../db');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const { authenticateToken } = require('./auth');
-
+const { ObjectId } = require('mongodb');
+playlistId = 1;
 const SECRET_KEY = process.env.SECRET_KEY;
 
-// Create a new playlist (POST)
+// Create a new playlist (POST) -> Works
 router.post('/', authenticateToken, async (req, res) => {
     try {
         const { name, isPublic, tracks = [] } = req.body;
@@ -19,11 +21,20 @@ router.post('/', authenticateToken, async (req, res) => {
         const db = await connectToDatabase();
         const playlists = db.collection('playlists');
 
-        // ✅ Use `req.user.username` (not `req.oidc.user.sub`)
-        const newPlaylist = { name, isPublic, tracks, userId: req.user.username };
+        
+        let validTracks = [];
+
+        // Validate tracks and check if they exist in albums
+        tracks.forEach(({ albumID, trackID }) => {
+            const album = albums.find((album) => album.albumID === albumID);
+            if (album && album.tracks.some((t) => t.trackID === trackID)) {
+                validTracks.push({ albumID, trackID });
+            }
+        })
+
+        const newPlaylist = { name, isPublic, tracks: validTracks, userId: req.user.username };
         const result = await playlists.insertOne(newPlaylist);
 
-        // ✅ Use `result.insertedId` instead of `result.ops[0]`
         res.status(201).json({ message: "Playlist created", playlistId: result.insertedId });
     } catch (error) {
         console.error("Error creating playlist:", error);
@@ -31,64 +42,73 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 });
 
-// List all public playlists (GET)
-router.get('/', async (req, res) => {
+
+router.patch('/:playlistId/tracks',authenticateToken, async (req, res) => {
     try {
-        const db = await connectToDatabase();
-        const playlists = db.collection('playlists');
-        const publicPlaylists = await playlists.find({ isPublic: true }).toArray();
-        res.status(200).send(publicPlaylists);
-    } catch (error) {
-        console.error("Error fetching public playlists:", error);
-        res.status(500).send('Internal Server Error');
-    }
-});
-
-// List all the User's public and private Playlists (GET)
-router.get('/my', authenticateToken, async (req, res) => {
-    try {
-        const db = await connectToDatabase();
-        const playlists = db.collection('playlists');
-
-        // Use `req.user.username` to fetch user's playlists
-        const userPlaylists = await playlists.find({ userId: req.user.username }).toArray();
-        res.status(200).send(userPlaylists);
-    } catch (error) {
-        console.error("Error fetching user playlists:", error);
-        res.status(500).send('Internal Server Error');
-    }
-});
-
-// Add a track to a playlist (POST)
-router.post('/:playlistId/tracks', authenticateToken, async (req, res) => {
-    try {
-        const { playlistId } = req.params;
-        const { track } = req.body;
-
-        if (!track) {
-            return res.status(400).send('Missing track information.');
+        let { playlistId } = req.params;
+        let { tracks } = req.body; // Accept an array of { albumID, trackID } pairs
+        console.log("playlistId", playlistId, "tracks", tracks);
+        if (!Array.isArray(tracks) || tracks.length === 0) {
+            
+            return res.status(400).send('Missing or invalid "tracks" array.');
         }
 
         const db = await connectToDatabase();
         const playlists = db.collection('playlists');
 
-        // Ensure user can only modify their own playlists
+        // Convert `playlistId` to ObjectId before querying
+        try {
+            playlistId = new ObjectId(playlistId);
+        } catch (err) {
+            
+            return res.status(400).send('Invalid playlist ID format.');
+        }
+        console.log("playlistId", playlistId);
+        // Retrieve the existing playlist to check for duplicates
+        const existingPlaylist = await playlists.findOne({ _id: playlistId });
+
+        if (!existingPlaylist) {
+            return res.status(404).send('Playlist not found.');
+        }
+        console.log("existingPlaylist", existingPlaylist);
+        let validTracks = [];
+
+        // Validate and filter out already existing tracks
+        tracks.forEach(({ albumID, trackID }) => {
+            const album = albums.find((album) => album.albumID === albumID); // Check if album exists
+            console.log("album", album, "albumID", albumID, "trackID", trackID);
+            if (album && album.tracks.some((t) => t.trackID === trackID) && !existingPlaylist.tracks.some((t) => t.albumID === albumID && t.trackID === trackID) // Skip duplicates
+            ) {
+                validTracks.push({ albumID, trackID });
+                console.log("validTracks", validTracks);
+            }
+        });
+
+        if (validTracks.length === 0) {
+            return res.status(400).send('No new valid tracks to add.');
+        }
+
+        // Add valid tracks to the playlist
         const updatedPlaylist = await playlists.findOneAndUpdate(
-            { _id: playlistId, userId: req.user.username },
-            { $push: { tracks: track } },
+            { _id: playlistId },
+            { $push: { tracks: { $each: validTracks } } },
             { returnDocument: 'after' }
         );
 
-        if (!updatedPlaylist) {
-            return res.status(404).send('Playlist not found or unauthorized');
-        }
+        res.status(200).json({
+            message: `Added ${validTracks.length} new track(s) to the playlist.`,
+            validTracks: validTracks,
+            playlist: updatedPlaylist.value
+        });
 
-        res.status(200).send(updatedPlaylist);
     } catch (error) {
-        console.error("Error adding track:", error);
+        console.error("Error adding tracks:", error);
         res.status(500).send('Internal Server Error');
     }
 });
+
+
+
 
 // Remove a track from a playlist (DELETE)
 router.delete('/:playlistId/tracks', authenticateToken, async (req, res) => {
@@ -153,6 +173,64 @@ router.patch('/:playlistId/tracks', authenticateToken, async (req, res) => {
         res.status(200).send({ message: "Track reordered", tracks: playlist.tracks });
     } catch (error) {
         console.error("Error moving track:", error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+// Change the privacy of a playlist (PATCH)
+router.patch('/:playlistId/privacy', authenticateToken, async (req, res) => {
+    try {
+        const { playlistId } = req.params;
+        const { isPublic } = req.body;
+
+        if (isPublic === undefined) {
+            return res.status(400).send('Missing privacy information.');
+        }
+
+        const db = await connectToDatabase();
+        const playlists = db.collection('playlists');
+
+        const updatedPlaylist = await playlists.findOneAndUpdate(
+            { _id: playlistId, userId: req.user.username },
+            { $set: { isPublic } },
+            { returnDocument: 'after' }
+        );
+
+        if (!updatedPlaylist) {
+            return res.status(404).send('Playlist not found or unauthorized');
+        }
+
+        res.status(200).send(updatedPlaylist);
+    } catch (error) {
+        console.error("Error changing privacy:", error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+// List all public playlists (GET) -> Works
+router.get('/', async (req, res) => {
+    try {
+        const db = await connectToDatabase();
+        const playlists = db.collection('playlists');
+        const publicPlaylists = await playlists.find({ isPublic: true }).toArray();
+        res.status(200).send(publicPlaylists);
+    } catch (error) {
+        console.error("Error fetching public playlists:", error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+// List all the User's public and private Playlists (GET) -> Works
+router.get('/my', authenticateToken, async (req, res) => {
+    try {
+        const db = await connectToDatabase();
+        const playlists = db.collection('playlists');
+
+        // Use `req.user.username` to fetch user's playlists
+        const userPlaylists = await playlists.find({ userId: req.user.username }).toArray();
+        res.status(200).send(userPlaylists);
+    } catch (error) {
+        console.error("Error fetching user playlists:", error);
         res.status(500).send('Internal Server Error');
     }
 });

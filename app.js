@@ -8,11 +8,12 @@ const logger = require('morgan');
 
 const { router: authRouter, authenticateToken } = require('./routes/auth');
 const indexRouter = require('./routes/index');
-const albumRouter = require('./routes/album');
+const { router: albumRouter } = require('./routes/album');
 const trackRouter = require('./routes/track');
 const artistRouter = require('./routes/artist');
 const concertRouter = require('./routes/concert');
 const playlistRouter = require('./routes/playlist');
+const tagRouter = require('./routes/tags');
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use('/artists', artistRouter);
 app.use('/concerts', concertRouter);
 app.use('/tracks', trackRouter);
 app.use('/playlists', playlistRouter);
+app.use('/tags', tagRouter);
 
 // Protected Route Example - Requires Login
 app.get('/playlists', authenticateToken, (req, res) => {

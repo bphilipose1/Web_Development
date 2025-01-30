@@ -103,4 +103,4 @@ router.use('/:albumID/tracks', (req, res, next) => {
   next();
 }, tracksRouter);
 
-module.exports = router;
+module.exports = { router, albums };
