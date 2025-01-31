@@ -42,7 +42,7 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 });
 
-
+// Update a playlist (PATCH) -> Works
 router.patch('/:playlistId/tracks',authenticateToken, async (req, res) => {
     try {
         let { playlistId } = req.params;
@@ -107,25 +107,34 @@ router.patch('/:playlistId/tracks',authenticateToken, async (req, res) => {
     }
 });
 
-
-
-
-// Remove a track from a playlist (DELETE)
+// Remove a track from a playlist (DELETE) -> Works
 router.delete('/:playlistId/tracks', authenticateToken, async (req, res) => {
     try {
-        const { playlistId } = req.params;
-        const { track } = req.body;
-
-        if (!track) {
-            return res.status(400).send('Missing track information.');
+        let { playlistId } = req.params;
+        let { trackId, albumId } = req.body;
+        
+        if (!trackId || !albumId) {
+            return res.status(400).send('Invalid Body.');
         }
-
+        // Convert `playlistId` to ObjectId before querying
+        try {
+            playlistId = new ObjectId(playlistId);
+            //convert trackId to int
+            trackId = parseInt(trackId);
+            albumId = parseInt(albumId);
+        } catch (err) {
+            
+            return res.status(400).send('Invalid playlist ID format.');
+        }
         const db = await connectToDatabase();
         const playlists = db.collection('playlists');
 
+        console.log("playlistId", playlistId, "trackId", trackId, "albumId", albumId);
+        
+        //remove track index from playlist
         const updatedPlaylist = await playlists.findOneAndUpdate(
             { _id: playlistId, userId: req.user.username },
-            { $pull: { tracks: track } },
+            { $pull: { tracks: { albumID: albumId, trackID: trackId } } }, // Remove only the matching track
             { returnDocument: 'after' }
         );
 
@@ -140,31 +149,43 @@ router.delete('/:playlistId/tracks', authenticateToken, async (req, res) => {
     }
 });
 
-// Move a track within a playlist (PATCH)
-router.patch('/:playlistId/tracks', authenticateToken, async (req, res) => {
+// Move a track within a playlist (PATCH) -> Works
+router.patch('/:playlistId/tracks/swap', authenticateToken, async (req, res) => {
     try {
-        const { playlistId } = req.params;
-        const { oldIndex, newIndex } = req.body;
-
+        let { playlistId } = req.params;
+        let { oldIndex, newIndex } = req.body;
+        console.log("typeof oldIndex", typeof oldIndex, "typeof newIndex", typeof newIndex);
         if (oldIndex === undefined || newIndex === undefined) {
             return res.status(400).send('Missing index information.');
         }
 
+        //convert playlistId to ObjectId
+        try {
+            playlistId = new ObjectId(playlistId);
+            oldIndex = parseInt(oldIndex);
+            newIndex = parseInt(newIndex);
+        } catch (err) {
+            return res.status(400).send('Invalid playlist ID format.');
+        }
+
+
         const db = await connectToDatabase();
         const playlists = db.collection('playlists');
 
-        // ✅ Fetch the playlist first
+        // Fetch the playlist from MongoDB
         const playlist = await playlists.findOne({ _id: playlistId, userId: req.user.username });
 
+        // Check if the playlist exists if not then either the playlist is not found or the user is unauthorized
         if (!playlist) {
             return res.status(404).send('Playlist not found or unauthorized');
         }
 
+        // Check if the indexes are valid or not
         if (oldIndex < 0 || newIndex < 0 || oldIndex >= playlist.tracks.length || newIndex >= playlist.tracks.length) {
             return res.status(400).send('Invalid track index.');
         }
 
-        // ✅ Move the track
+        // Move the track
         const [movedTrack] = playlist.tracks.splice(oldIndex, 1);
         playlist.tracks.splice(newIndex, 0, movedTrack);
 
@@ -177,16 +198,27 @@ router.patch('/:playlistId/tracks', authenticateToken, async (req, res) => {
     }
 });
 
-// Change the privacy of a playlist (PATCH)
+// Change the privacy of a playlist (PATCH) -> Works
 router.patch('/:playlistId/privacy', authenticateToken, async (req, res) => {
     try {
-        const { playlistId } = req.params;
-        const { isPublic } = req.body;
+        let { playlistId } = req.params;
+        let { isPublic } = req.body;
 
         if (isPublic === undefined) {
             return res.status(400).send('Missing privacy information.');
         }
-
+        // Check if the privacy is a boolean
+        if (typeof isPublic !== 'boolean') {
+            return res.status(400).send('Invalid privacy value.');
+        }
+        // Convert `playlistId` to ObjectId before querying
+        try {
+            playlistId = new ObjectId(playlistId);
+            isPublic = Boolean(isPublic);
+        } catch (err) {
+            return res.status(400).send('Invalid playlist ID format.');
+        }
+    
         const db = await connectToDatabase();
         const playlists = db.collection('playlists');
 
@@ -199,13 +231,13 @@ router.patch('/:playlistId/privacy', authenticateToken, async (req, res) => {
         if (!updatedPlaylist) {
             return res.status(404).send('Playlist not found or unauthorized');
         }
-
         res.status(200).send(updatedPlaylist);
     } catch (error) {
         console.error("Error changing privacy:", error);
         res.status(500).send('Internal Server Error');
     }
 });
+
 
 // List all public playlists (GET) -> Works
 router.get('/', async (req, res) => {
