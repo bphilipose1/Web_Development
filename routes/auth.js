@@ -92,7 +92,7 @@ router.post('/login', async (req, res) => {
         //Create a JWT token that expires in 15 minutes
         const token = jwt.sign({username}, SECRET_KEY, {expiresIn: '15m'});
         res.cookie('auth_token', token, {httpOnly: true});
-        res.status(200).send('Logged in');
+        res.status(200).send('Logged in...\nHello, ' + username);
     } catch (error) {
         console.error("Login error:", error);
         res.status(500).json({ message: "Internal Server Error" });
@@ -105,7 +105,7 @@ router.post('/login', async (req, res) => {
 //User Log Out
 router.post('/logout', (req, res) => {
     res.clearCookie('auth_token');
-    res.status(200).send('Logged out');
+    res.status(200).send('Logged out...\nGoodbye');
 })
 
 
