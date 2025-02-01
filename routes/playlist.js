@@ -7,15 +7,14 @@ require('dotenv').config();
 const { authenticateToken } = require('./auth');
 const { ObjectId } = require('mongodb');
 playlistId = 1;
-const SECRET_KEY = process.env.SECRET_KEY;
 
-// Create a new playlist (POST) -> Works
+// Create a new playlist (POST)
 router.post('/', authenticateToken, async (req, res) => {
     try {
         const { name, isPublic, tracks = [] } = req.body;
 
         if (!name) {
-            return res.status(400).send('Missing required information (name).');
+            return res.status(400).send('Missing name feild.');
         }
 
         const db = await connectToDatabase();
@@ -24,7 +23,7 @@ router.post('/', authenticateToken, async (req, res) => {
         
         let validTracks = [];
 
-        // Validate tracks and check if they exist in albums
+        //ensure that the track album ids are both existing and valid
         tracks.forEach(({ albumID, trackID }) => {
             const album = albums.find((album) => album.albumID === albumID);
             if (album && album.tracks.some((t) => t.trackID === trackID)) {
@@ -37,7 +36,6 @@ router.post('/', authenticateToken, async (req, res) => {
 
         res.status(201).json({ message: "Playlist created", playlistId: result.insertedId });
     } catch (error) {
-        console.error("Error creating playlist:", error);
         res.status(500).send('Internal Server Error');
     }
 });
@@ -95,7 +93,7 @@ router.patch('/:playlistId/tracks',authenticateToken, async (req, res) => {
             { returnDocument: 'after' }
         );
 
-        res.status(200).json({
+        res.send({
             message: `Added ${validTracks.length} new track(s) to the playlist.`,
             validTracks: validTracks,
             playlist: updatedPlaylist.value
@@ -142,7 +140,7 @@ router.delete('/:playlistId/tracks', authenticateToken, async (req, res) => {
             return res.status(404).send('Playlist not found or unauthorized');
         }
 
-        res.status(200).send(updatedPlaylist);
+        res.send(updatedPlaylist);
     } catch (error) {
         console.error("Error removing track:", error);
         res.status(500).send('Internal Server Error');
@@ -191,9 +189,9 @@ router.patch('/:playlistId/tracks/swap', authenticateToken, async (req, res) => 
 
         await playlists.updateOne({ _id: playlistId }, { $set: { tracks: playlist.tracks } });
 
-        res.status(200).send({ message: "Track reordered", tracks: playlist.tracks });
+        res.send({ message: "Track reordered", tracks: playlist.tracks });
     } catch (error) {
-        console.error("Error moving track:", error);
+        console.error("error moving track:", error);
         res.status(500).send('Internal Server Error');
     }
 });
@@ -231,9 +229,9 @@ router.patch('/:playlistId/privacy', authenticateToken, async (req, res) => {
         if (!updatedPlaylist) {
             return res.status(404).send('Playlist not found or unauthorized');
         }
-        res.status(200).send(updatedPlaylist);
+        res.send(updatedPlaylist);
     } catch (error) {
-        console.error("Error changing privacy:", error);
+        console.error("error changing privacy:", error);
         res.status(500).send('Internal Server Error');
     }
 });
@@ -245,9 +243,9 @@ router.get('/', async (req, res) => {
         const db = await connectToDatabase();
         const playlists = db.collection('playlists');
         const publicPlaylists = await playlists.find({ isPublic: true }).toArray();
-        res.status(200).send(publicPlaylists);
+        res.send(publicPlaylists);
     } catch (error) {
-        console.error("Error fetching public playlists:", error);
+        console.error("error getting public playlists:", error);
         res.status(500).send('Internal Server Error');
     }
 });
@@ -260,9 +258,9 @@ router.get('/my', authenticateToken, async (req, res) => {
 
         // Use `req.user.username` to fetch user's playlists
         const userPlaylists = await playlists.find({ userId: req.user.username }).toArray();
-        res.status(200).send(userPlaylists);
+        res.send(userPlaylists);
     } catch (error) {
-        console.error("Error fetching user playlists:", error);
+        console.error("error getting user playlists:", error);
         res.status(500).send('Internal Server Error');
     }
 });

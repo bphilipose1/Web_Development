@@ -9,11 +9,11 @@ async function connectToDatabase() {
   if (!db) {
     try {
       await client.connect();
-      db = client.db(); // Uses database from URI
+      db = client.db(); //uses database from URI
       console.log('Connected to MongoDB Atlas');
     } catch (error) {
       console.error('MongoDB connection error:', error);
-      process.exit(1); // Stop app if DB fails
+      process.exit(1); //stop app if DB fails
     }
   }
   return db;

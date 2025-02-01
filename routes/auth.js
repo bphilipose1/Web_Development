@@ -7,12 +7,12 @@ const connectToDatabase = require('../db');
 const router = express.Router();
 const SECRET_KEY = process.env.SECRET_KEY;
 
-//Create a set of rules to ensure that the username is a valid username
+//Use regex to ensure that the string can be a valid username
 const usernameRegex = /^[a-zA-Z0-9]{5,12}$/;
 const passwordRegex = /^[a-zA-Z0-9]{5,12}$/;
 
 
-// Middleware to ensure authentication
+// middleware to ensure authentication token is valid
 function authenticateToken(req, res, next) {
     const token = req.cookies ? req.cookies.auth_token : null;
 
@@ -26,7 +26,7 @@ function authenticateToken(req, res, next) {
 }
 
 
-//User Sign Up
+//User Sign Up (POST)
 router.post('/signup', async (req, res) => {
     const {username, password} = req.body;
     console.log(username, password);
@@ -34,7 +34,6 @@ router.post('/signup', async (req, res) => {
         return res.status(400).send('Missing required information_test');
     }  
     
-    //TODO: Check iF THE USER NAME IS EVEN VALID
     if (!usernameRegex.test(username)) {
         return res.status(400).send('Invalid username');
     }
@@ -45,13 +44,13 @@ router.post('/signup', async (req, res) => {
     const db = await connectToDatabase();
     const users = db.collection('users');
 
-    //Check if the user already exists
+    //check if the user already exists
     const existingUser = await users.findOne({username});
     if (existingUser) {
         return res.status(400).send('User already exists');
     }
 
-    //Hash the password
+    //hash the password with 10 rounds of salt
     const hashedPass = await bcrypt.hash(password, 10);
     const newUser = {username, passwordHash: hashedPass};
 
@@ -61,7 +60,7 @@ router.post('/signup', async (req, res) => {
 });
 
 
-//User Log In
+//User Log In (POST)
 router.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -89,10 +88,10 @@ router.post('/login', async (req, res) => {
             return res.status(401).send('Invalid username or password');
         }
         
-        //Create a JWT token that expires in 15 minutes
+        //create a JWT token that expires in 15 minutes
         const token = jwt.sign({username}, SECRET_KEY, {expiresIn: '15m'});
         res.cookie('auth_token', token, {httpOnly: true});
-        res.status(200).send('Logged in...\nHello, ' + username);
+        res.send('Logged in...\nHello, ' + username);
     } catch (error) {
         console.error("Login error:", error);
         res.status(500).json({ message: "Internal Server Error" });
@@ -102,12 +101,12 @@ router.post('/login', async (req, res) => {
 
 
 
-//User Log Out
+//User Log Out (POST)
 router.post('/logout', (req, res) => {
     res.clearCookie('auth_token');
-    res.status(200).send('Logged out...\nGoodbye');
+    res.send('Logged out...\nGoodbye');
 })
 
 
-//export both the router and authenticateToken
+//export both the router and authenticateToken function
 module.exports = { router, authenticateToken };
